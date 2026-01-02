@@ -1,7 +1,7 @@
 import { ArrowUpRight, CreditCard, Wallet, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// 1. CONFIGURATION: PASTE YOUR REFERRAL LINKS HERE
+// 1. CONFIGURATION: YOUR REAL REFERRAL LINKS
 const OFFERS = [
   {
     id: "binance",
@@ -10,7 +10,8 @@ const OFFERS = [
     icon: <TrendingUp className="text-[#F3BA2F]" size={32} />, 
     color: "bg-[#F3BA2F]/10 text-[#F3BA2F] border-[#F3BA2F]",
     buttonColor: "bg-[#1E2329] hover:bg-[#2b313a]",
-    link: "https://accounts.binance.com/register?ref=YOUR_BINANCE_ID", // <--- PASTE LINK
+    // ✅ YOUR BINANCE LINK
+    link: "https://www.binance.com/activity/referral-entry/CPA?ref=CPA_001NJVS27D", 
     cta: "Trade USDT"
   },
   {
@@ -20,7 +21,8 @@ const OFFERS = [
     icon: <CreditCard className="text-[#FF3B30]" size={32} />,
     color: "bg-[#FF3B30]/10 text-[#FF3B30] border-[#FF3B30]",
     buttonColor: "bg-[#FF3B30] hover:bg-[#d63026]",
-    link: "https://url.redotpay.com/invite?ref=YOUR_REDOTPAY_ID", // <--- PASTE LINK
+    // ⚠️ REPLACE THIS WITH YOUR REDOTPAY LINK (Check App -> Invite)
+    link: "https://url.redotpay.com/invite?ref=YOUR_REDOTPAY_ID", 
     cta: "Get $5 Bonus"
   },
   {
@@ -30,7 +32,8 @@ const OFFERS = [
     icon: <Wallet className="text-[#00F0FF]" size={32} />,
     color: "bg-[#00F0FF]/10 text-[#009199] border-[#00F0FF]",
     buttonColor: "bg-[#00F0FF] text-slate-900 hover:bg-[#00dceb]",
-    link: "https://partner.bitget.com/bg/YOUR_BITGET_ID", // <--- PASTE LINK
+    // ✅ YOUR BITGET LINK
+    link: "https://share.bitget.com/u/2KZ8U850", 
     cta: "Sign Up"
   }
 ];

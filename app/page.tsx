@@ -4,6 +4,7 @@ import CurrencyCarousel from "@/components/currency-carousel";
 import AuthModal from "@/components/auth-modal";
 import AffiliateGrid from "@/components/affiliate-grid";
 import RealComments from "@/components/real-comments";
+import Script from 'next/script'; // <--- Import this
 
 export const revalidate = 0;
 
@@ -20,6 +21,21 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-[#F0F2F5] font-sans text-slate-900">
       
+      {/* --- GOOGLE ANALYTICS INTEGRATION --- */}
+      <Script 
+        src="https://www.googletagmanager.com/gtag/js?id=G-CYGPG4SS02" 
+        strategy="afterInteractive" 
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-CYGPG4SS02');
+        `}
+      </Script>
+      {/* ------------------------------------ */}
+
       {/* HEADER */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="bg-slate-900 text-slate-300 text-[11px] font-bold py-2 px-4 flex justify-between items-center">
