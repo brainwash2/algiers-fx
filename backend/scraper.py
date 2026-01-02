@@ -3,6 +3,10 @@ import re
 import datetime
 from database import insert_rate_row
 
+# --- CONFIGURATION ---
+MIN_PRICE_THRESHOLD = 50.0  # Any price below 50 DZD is considered a bug (garbage)
+# ---------------------
+
 def get_official_rates():
     try:
         url = "https://open.er-api.com/v6/latest/EUR"
@@ -25,32 +29,40 @@ def get_parallel_rates():
     }
     
     try:
+        print(f"🔎 Scraping {url}...")
         response = requests.get(url, headers=headers, timeout=15)
         html = response.text
         
-        # UPDATED REGEX v3: STRICT MODE
-        # We changed (\d+) to (\d{2,}) 
-        # This means "Find a number with AT LEAST 2 digits".
-        # It will ignore "1" and "2" and find "173" instead.
+        # Regex to find numbers. We grab ANY number near the currency name.
+        # We will filter the bad ones (1, 2) using Python logic below.
         patterns = {
-            "EUR": r'1\s*EURO.*?(\d{2,}(?:\.\d+)?).*?BUY RATE.*?(\d{2,}(?:\.\d+)?).*?SELL RATE',
-            "USD": r'1\s*US DOLLAR.*?(\d{2,}(?:\.\d+)?).*?BUY RATE.*?(\d{2,}(?:\.\d+)?).*?SELL RATE',
-            "GBP": r'1\s*POUND.*?(\d{2,}(?:\.\d+)?).*?BUY RATE.*?(\d{2,}(?:\.\d+)?).*?SELL RATE',
-            "CAD": r'1\s*CA.*?DOLLAR.*?(\d{2,}(?:\.\d+)?).*?BUY RATE.*?(\d{2,}(?:\.\d+)?).*?SELL RATE'
+            "EUR": r'1\s*EURO.*?(\d+(?:\.\d+)?).*?BUY RATE.*?(\d+(?:\.\d+)?).*?SELL RATE',
+            "USD": r'1\s*US DOLLAR.*?(\d+(?:\.\d+)?).*?BUY RATE.*?(\d+(?:\.\d+)?).*?SELL RATE',
+            "GBP": r'1\s*POUND.*?(\d+(?:\.\d+)?).*?BUY RATE.*?(\d+(?:\.\d+)?).*?SELL RATE',
+            "CAD": r'1\s*CA.*?DOLLAR.*?(\d+(?:\.\d+)?).*?BUY RATE.*?(\d+(?:\.\d+)?).*?SELL RATE'
         }
 
         results = {}
+        defaults = {"EUR": 281.0, "USD": 277.0, "GBP": 350.0, "CAD": 173.0}
 
         for code, pattern in patterns.items():
             match = re.search(pattern, html, re.IGNORECASE | re.DOTALL)
+            
             if match:
-                results[f"{code}_BUY"] = float(match.group(1))
-                results[f"{code}_SELL"] = float(match.group(2))
-                print(f"✅ Found {code}: {match.group(1)} / {match.group(2)}")
+                buy_raw = float(match.group(1))
+                sell_raw = float(match.group(2))
+                
+                # SANITY CHECK: Is the price realistic?
+                if buy_raw > MIN_PRICE_THRESHOLD:
+                    results[f"{code}_BUY"] = buy_raw
+                    results[f"{code}_SELL"] = sell_raw
+                    print(f"✅ Found Valid {code}: {buy_raw}")
+                else:
+                    print(f"⚠️ Found GARBAGE {code} ({buy_raw}). Using Backup.")
+                    results[f"{code}_BUY"] = defaults[code]
+                    results[f"{code}_SELL"] = defaults[code] + 2.0
             else:
-                print(f"⚠️ Regex failed for {code}. Using Backup.")
-                # Accurate Backup Rates (Jan 2026 Estimate)
-                defaults = {"EUR": 281.0, "USD": 277.0, "GBP": 350.0, "CAD": 173.0}
+                print(f"❌ Regex failed for {code}. Using Backup.")
                 results[f"{code}_BUY"] = defaults[code]
                 results[f"{code}_SELL"] = defaults[code] + 2.0
 
@@ -61,7 +73,7 @@ def get_parallel_rates():
         return {}
 
 def fetch_and_save():
-    print("🚀 Starting Scraper v3...")
+    print("🚀 Starting Scraper (Sanity Checked)...")
     official = get_official_rates()
     parallel = get_parallel_rates()
     
