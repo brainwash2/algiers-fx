@@ -20,20 +20,23 @@ def get_official_rates():
 
 def get_parallel_rates():
     url = "https://devisesquare.com/"
-    headers = {"User-Agent": "Mozilla/5.0"}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
     
     try:
         response = requests.get(url, headers=headers, timeout=15)
         html = response.text
         
-        # UPDATED REGEX: More flexible
-        # 1. Matches "EURO" OR "EU DOLLAR" etc.
-        # 2. Matches numbers like "281" OR "281.00" (Optional decimal)
+        # UPDATED REGEX v3: STRICT MODE
+        # We changed (\d+) to (\d{2,}) 
+        # This means "Find a number with AT LEAST 2 digits".
+        # It will ignore "1" and "2" and find "173" instead.
         patterns = {
-            "EUR": r'1\s*EURO.*?(\d+(?:\.\d+)?).*?BUY RATE.*?(\d+(?:\.\d+)?).*?SELL RATE',
-            "USD": r'1\s*US DOLLAR.*?(\d+(?:\.\d+)?).*?BUY RATE.*?(\d+(?:\.\d+)?).*?SELL RATE',
-            "GBP": r'1\s*POUND.*?(\d+(?:\.\d+)?).*?BUY RATE.*?(\d+(?:\.\d+)?).*?SELL RATE',
-            "CAD": r'1\s*CA.*?DOLLAR.*?(\d+(?:\.\d+)?).*?BUY RATE.*?(\d+(?:\.\d+)?).*?SELL RATE'
+            "EUR": r'1\s*EURO.*?(\d{2,}(?:\.\d+)?).*?BUY RATE.*?(\d{2,}(?:\.\d+)?).*?SELL RATE',
+            "USD": r'1\s*US DOLLAR.*?(\d{2,}(?:\.\d+)?).*?BUY RATE.*?(\d{2,}(?:\.\d+)?).*?SELL RATE',
+            "GBP": r'1\s*POUND.*?(\d{2,}(?:\.\d+)?).*?BUY RATE.*?(\d{2,}(?:\.\d+)?).*?SELL RATE',
+            "CAD": r'1\s*CA.*?DOLLAR.*?(\d{2,}(?:\.\d+)?).*?BUY RATE.*?(\d{2,}(?:\.\d+)?).*?SELL RATE'
         }
 
         results = {}
@@ -43,25 +46,28 @@ def get_parallel_rates():
             if match:
                 results[f"{code}_BUY"] = float(match.group(1))
                 results[f"{code}_SELL"] = float(match.group(2))
+                print(f"✅ Found {code}: {match.group(1)} / {match.group(2)}")
             else:
-                print(f"⚠️ Could not find real rate for {code}. Using Backup.")
-                # These are your backup numbers if scraping fails
-                defaults = {"EUR": 281.0, "USD": 277.0, "GBP": 350.0, "CAD": 170.0}
+                print(f"⚠️ Regex failed for {code}. Using Backup.")
+                # Accurate Backup Rates (Jan 2026 Estimate)
+                defaults = {"EUR": 281.0, "USD": 277.0, "GBP": 350.0, "CAD": 173.0}
                 results[f"{code}_BUY"] = defaults[code]
                 results[f"{code}_SELL"] = defaults[code] + 2.0
 
         return results
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Network/Parse Error: {e}")
         return {}
 
 def fetch_and_save():
-    print("🚀 Starting Scraper...")
+    print("🚀 Starting Scraper v3...")
     official = get_official_rates()
     parallel = get_parallel_rates()
     
-    if not parallel: return
+    if not parallel: 
+        print("❌ No data found.")
+        return
 
     currencies = ["EUR", "USD", "GBP", "CAD"]
     for curr in currencies:
